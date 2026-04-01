@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobTrackr - Job Application Tracker Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.0/dist/Recharts.js"></script>
+  <style>
+    * { @apply transition-all duration-200; }
+    .nav-active { @apply border-b-2 border-blue-500 text-blue-600; }
+    .status-badge { @apply px-3 py-1 rounded-full text-xs font-medium; }
+    .status-wishlist { @apply bg-gray-100 text-gray-700; }
+    .status-applied { @apply bg-blue-100 text-blue-700; }
+    .status-screening { @apply bg-purple-100 text-purple-700; }
+    .status-interview { @apply bg-orange-100 text-orange-700; }
+    .status-offer { @apply bg-green-100 text-green-700; }
+    .status-rejected { @apply bg-red-100 text-red-700; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="app"></div>
+
+  <script>
+    const app = document.getElementById('app');
+    let currentPage = 'dashboard';
+
+    const mockData = {
+      user: { name: 'Sarah Chen', email: 'sarah@example.com' },
+      stats: {
+        total: 24,
+        applied: 8,
+        screening: 3,
+        interview: 2,
+        offer: 1,
+        responseRate: 42
+      },
+      applications: [
+        { id: 1, company: 'Google', role: 'Senior Engineer', status: 'INTERVIEW', location: 'Mountain View, CA', salary: '$180K-$220K', date: 'Mar 15' },
+        { id: 2, company: 'Stripe', role: 'Frontend Engineer', status: 'SCREENING', location: 'Remote', salary: '$150K-$180K', date: 'Mar 10' },
+        { id: 3, company: 'Vercel', role: 'DevRel Engineer', status: 'OFFER', location: 'Remote', salary: '$140K-$170K', date: 'Mar 5' },
+        { id: 4, company: 'Meta', role: 'Software Engineer', status: 'APPLIED', location: 'Menlo Park, CA', salary: '$170K-$210K', date: 'Mar 1' },
+        { id: 5, company: 'Apple', role: 'iOS Engineer', status: 'WISHLIST', location: 'Cupertino, CA', salary: '$160K-$200K', date: 'Feb 28' },
+        { id: 6, company: 'Netflix', role: 'Backend Engineer', status: 'REJECTED', location: 'Los Gatos, CA', salary: '$180K-$220K', date: 'Feb 20' },
+      ]
+    };
+
+    function getStatusClass(status) {
+      const map = {
+        WISHLIST: 'status-wishlist',
+        APPLIED: 'status-applied',
+        SCREENING: 'status-screening',
+        INTERVIEW: 'status-interview',
+        OFFER: 'status-offer',
+        REJECTED: 'status-rejected'
+      };
+      return map[status] || 'status-wishlist';
+    }
+
+    function getStatusLabel(status) {
+      const map = {
+        WISHLIST: 'Wishlist',
+        APPLIED: 'Applied',
+        SCREENING: 'Screening',
+        INTERVIEW: 'Interview',
+        OFFER: 'Offer',
+        REJECTED: 'Rejected'
+      };
+      return map[status] || status;
+    }
+
+    function renderNav() {
+      return `
+        <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">⚡</div>
+                <span class="text-xl font-bold text-gray-900">JobTrackr</span>
+              </div>
+              <div class="flex gap-8">
+                <button onclick="setPage('dashboard')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'dashboard' ? 'nav-active' : ''}">Dashboard</button>
+                <button onclick="setPage('applications')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'applications' ? 'nav-active' : ''}">Applications</button>
+                <button onclick="setPage('kanban')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'kanban' ? 'nav-active' : ''}">Kanban</button>
+                <button onclick="setPage('analytics')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'analytics' ? 'nav-active' : ''}">Analytics</button>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right text-sm">
+                  <div class="font-medium text-gray-900">${mockData.user.name}</div>
+                  <div class="text-gray-500 text-xs">${mockData.user.email}</div>
+                </div>
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderDashboard() {
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Welcome back, ${mockData.user.name}!</h1>
+            <p class="text-gray-500 mt-2">Track your job applications and stay organized</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-gray-900">${mockData.stats.total}</div>
+              <div class="text-sm text-gray-500 mt-1">Total Applications</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-blue-600">${mockData.stats.applied}</div>
+              <div class="text-sm text-gray-500 mt-1">Applied</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-purple-600">${mockData.stats.screening}</div>
+              <div class="text-sm text-gray-500 mt-1">Screening</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-orange-600">${mockData.stats.interview}</div>
+              <div class="text-sm text-gray-500 mt-1">Interview</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-green-600">${mockData.stats.offer}</div>
+              <div class="text-sm text-gray-500 mt-1">Offer</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <div class="text-3xl font-bold text-green-600">${mockData.stats.responseRate}%</div>
+              <div class="text-sm text-gray-500 mt-1">Response Rate</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Applications</h2>
+              <div class="space-y-3">
+                ${mockData.applications.slice(0, 4).map(app => `
+                  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">${app.company}</div>
+                      <div class="text-sm text-gray-500">${app.role}</div>
+                    </div>
+                    <span class="status-badge ${getStatusClass(app.status)}">${getStatusLabel(app.status)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Pipeline Status</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Wishlist</span>
+                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-gray-400" style="width: 30%"></div>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Applied</span>
+                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" style="width: 35%"></div>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Screening</span>
+                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-purple-500" style="width: 15%"></div>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Interview</span>
+                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-orange-500" style="width: 10%"></div>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Offer</span>
+                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-green-500" style="width: 5%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderApplications() {
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div class="flex justify-between items-center mb-8">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">Applications</h1>
+              <p class="text-gray-500 mt-2">Manage all your job applications</p>
+            </div>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">+ Add Application</button>
+          </div>
+
+          <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Company</th>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Role</th>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Location</th>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Salary</th>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                ${mockData.applications.map(app => `
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${app.company}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${app.role}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${app.location}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${app.salary}</td>
+                    <td class="px-6 py-4"><span class="status-badge ${getStatusClass(app.status)}">${getStatusLabel(app.status)}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${app.date}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderKanban() {
+      const columns = ['WISHLIST', 'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'REJECTED'];
+      const columnLabels = { WISHLIST: 'Wishlist', APPLIED: 'Applied', SCREENING: 'Screening', INTERVIEW: 'Interview', OFFER: 'Offer', REJECTED: 'Rejected' };
+      const columnColors = { WISHLIST: 'gray', APPLIED: 'blue', SCREENING: 'purple', INTERVIEW: 'orange', OFFER: 'green', REJECTED: 'red' };
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
+            <p class="text-gray-500 mt-2">Visualize your job application pipeline</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
+            ${columns.map(col => {
+              const apps = mockData.applications.filter(a => a.status === col);
+              const colorMap = { gray: 'bg-gray-100 border-gray-300', blue: 'bg-blue-100 border-blue-300', purple: 'bg-purple-100 border-purple-300', orange: 'bg-orange-100 border-orange-300', green: 'bg-green-100 border-green-300', red: 'bg-red-100 border-red-300' };
+              return `
+                <div class="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div class="font-semibold text-gray-900 mb-4">${columnLabels[col]} (${apps.length})</div>
+                  <div class="space-y-3">
+                    ${apps.map(app => `
+                      <div class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md cursor-move">
+                        <div class="font-medium text-gray-900">${app.company}</div>
+                        <div class="text-sm text-gray-600 mt-1">${app.role}</div>
+                        <div class="text-xs text-gray-500 mt-2">${app.location}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAnalytics() {
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Analytics</h1>
+            <p class="text-gray-500 mt-2">Track your job search metrics and trends</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Applications Over Time</h2>
+              <div class="h-64 flex items-end justify-around gap-2">
+                ${[12, 18, 15, 21, 19, 24].map((val, i) => `
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-8 bg-blue-500 rounded-t" style="height: ${(val / 24) * 200}px"></div>
+                    <div class="text-xs text-gray-500">Week ${i + 1}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Status Distribution</h2>
+              <div class="space-y-4">
+                ${[
+                  { label: 'Wishlist', value: 7, color: 'bg-gray-400', pct: 29 },
+                  { label: 'Applied', value: 8, color: 'bg-blue-500', pct: 33 },
+                  { label: 'Screening', value: 3, color: 'bg-purple-500', pct: 13 },
+                  { label: 'Interview', value: 2, color: 'bg-orange-500', pct: 8 },
+                  { label: 'Offer', value: 1, color: 'bg-green-500', pct: 4 },
+                  { label: 'Rejected', value: 3, color: 'bg-red-500', pct: 13 }
+                ].map(item => `
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span class="text-gray-700">${item.label}</span>
+                      <span class="font-medium text-gray-900">${item.value} (${item.pct}%)</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div class="${item.color}" style="width: ${item.pct}%"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Response Rate</h2>
+              <div class="flex items-center justify-center">
+                <div class="relative w-40 h-40">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="8" stroke-dasharray="119.4 283.5" stroke-linecap="round"/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center">
+                      <div class="text-4xl font-bold text-gray-900">42%</div>
+                      <div class="text-sm text-gray-500">Response Rate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">Key Metrics</h2>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                  <span class="text-gray-600">Avg. Days to Response</span>
+                  <span class="font-bold text-gray-900">4.2 days</span>
+                </div>
+                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                  <span class="text-gray-600">Interview Rate</span>
+                  <span class="font-bold text-gray-900">12.5%</span>
+                </div>
+                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                  <span class="text-gray-600">Offer Rate</span>
+                  <span class="font-bold text-gray-900">4.2%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Most Active Day</span>
+                  <span class="font-bold text-gray-900">Tuesday</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      let content = '';
+      switch (currentPage) {
+        case 'dashboard':
+          content = renderDashboard();
+          break;
+        case 'applications':
+          content = renderApplications();
+          break;
+        case 'kanban':
+          content = renderKanban();
+          break;
+        case 'analytics':
+          content = renderAnalytics();
+          break;
+      }
+      app.innerHTML = renderNav() + content;
+    }
+
+    function setPage(page) {
+      currentPage = page;
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
