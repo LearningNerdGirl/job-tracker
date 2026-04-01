@@ -3,381 +3,222 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobTrackr - Job Application Tracker Demo</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.0/dist/Recharts.js"></script>
+  <title>JobTrackr - Interactive Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { transition: all 0.2s; }
-    .nav-active { border-bottom: 2px solid #3b82f6; color: #2563eb; }
-    .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-    .status-wishlist { background-color: #f3f4f6; color: #374151; }
-    .status-applied { background-color: #dbeafe; color: #1e40af; }
-    .status-screening { background-color: #e9d5ff; color: #6b21a8; }
-    .status-interview { background-color: #fed7aa; color: #92400e; }
-    .status-offer { background-color: #dcfce7; color: #15803d; }
-    .status-rejected { background-color: #fee2e2; color: #991b1b; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    .nav { background: #fff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 50; }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700; }
+    .nav-logo-text { font-size: 20px; font-weight: 700; color: #0f172a; }
+    .nav-tabs { display: flex; gap: 0; }
+    .nav-tab { padding: 20px 16px; background: none; border: none; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: inherit; }
+    .nav-tab:hover { color: #334155; }
+    .nav-tab.active { color: #2563eb; border-bottom-color: #3b82f6; }
+    .nav-user { display: flex; align-items: center; gap: 12px; }
+    .nav-user-info { text-align: right; }
+    .nav-user-name { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .nav-user-email { font-size: 12px; color: #94a3b8; }
+    .nav-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, #60a5fa, #2563eb); border-radius: 50%; }
+    .banner { background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border-bottom: 1px solid #e2e8f0; padding: 12px 0; text-align: center; font-size: 13px; color: #475569; }
+    .banner a { color: #2563eb; font-weight: 600; text-decoration: none; }
+    .banner a:hover { text-decoration: underline; }
+
+    /* Page content */
+    .page { padding: 32px 0 48px; }
+    .page-title { font-size: 28px; font-weight: 700; color: #0f172a; }
+    .page-subtitle { font-size: 14px; color: #64748b; margin-top: 4px; }
+    .page-header { margin-bottom: 32px; }
+
+    /* Cards */
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .stat-label { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    /* Grid layouts */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .grid-2-equal { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    /* Recent apps */
+    .app-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 10px; }
+    .app-row:hover { background: #f1f5f9; }
+    .app-company { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .app-role { font-size: 13px; color: #64748b; }
+
+    /* Status badges */
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+    .badge-wishlist { background: #f1f5f9; color: #475569; }
+    .badge-applied { background: #dbeafe; color: #1e40af; }
+    .badge-screening { background: #ede9fe; color: #6d28d9; }
+    .badge-interview { background: #fff7ed; color: #c2410c; }
+    .badge-offer { background: #dcfce7; color: #15803d; }
+    .badge-rejected { background: #fee2e2; color: #b91c1c; }
+
+    /* Pipeline bars */
+    .pipeline-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .pipeline-label { font-size: 13px; color: #475569; width: 80px; }
+    .pipeline-bar { width: 100px; height: 6px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; }
+    .pipeline-fill { height: 100%; border-radius: 9999px; }
+
+    /* Table */
+    .table-wrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f8fafc; }
+    th { padding: 12px 20px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 14px 20px; font-size: 14px; color: #334155; border-bottom: 1px solid #f1f5f9; }
+    tr:hover td { background: #f8fafc; }
+    td.bold { font-weight: 600; color: #0f172a; }
+
+    /* Btn */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn:hover { background: #1d4ed8; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+    /* Kanban */
+    .kanban-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+    .kanban-col { background: #f1f5f9; border-radius: 12px; padding: 16px; min-height: 200px; }
+    .kanban-col-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
+    .kanban-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 10px; cursor: grab; }
+    .kanban-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .kanban-card-company { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .kanban-card-role { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .kanban-card-loc { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+
+    /* Charts */
+    .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; height: 220px; padding-top: 20px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .bar { width: 40px; border-radius: 6px 6px 0 0; }
+    .bar-label { font-size: 12px; color: #64748b; }
+    .progress-row { margin-bottom: 14px; }
+    .progress-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .progress-bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 9999px; }
+    .donut-wrap { display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .donut-center { position: absolute; text-align: center; }
+    .donut-value { font-size: 36px; font-weight: 700; color: #0f172a; }
+    .donut-label { font-size: 13px; color: #64748b; }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-label { font-size: 14px; color: #475569; }
+    .metric-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .grid-2, .grid-2-equal { grid-template-columns: 1fr; }
+      .kanban-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-tabs { gap: 0; }
+      .nav-user-info { display: none; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .kanban-grid { grid-template-columns: 1fr; }
+      .nav-tab { padding: 20px 10px; font-size: 13px; }
+    }
   </style>
 </head>
-<body class="bg-gray-50">
+<body>
+  <div class="banner">This is an interactive prototype of <strong>JobTrackr</strong>. <a href="https://github.com/LearningNerdGirl/job-tracker" target="_blank">View Source on GitHub</a></div>
   <div id="app"></div>
 
   <script>
     const app = document.getElementById('app');
     let currentPage = 'dashboard';
 
-    const mockData = {
+    const D = {
       user: { name: 'Sarah Chen', email: 'sarah@example.com' },
-      stats: {
-        total: 24,
-        applied: 8,
-        screening: 3,
-        interview: 2,
-        offer: 1,
-        responseRate: 42
-      },
-      applications: [
-        { id: 1, company: 'Google', role: 'Senior Engineer', status: 'INTERVIEW', location: 'Mountain View, CA', salary: '$180K-$220K', date: 'Mar 15' },
-        { id: 2, company: 'Stripe', role: 'Frontend Engineer', status: 'SCREENING', location: 'Remote', salary: '$150K-$180K', date: 'Mar 10' },
-        { id: 3, company: 'Vercel', role: 'DevRel Engineer', status: 'OFFER', location: 'Remote', salary: '$140K-$170K', date: 'Mar 5' },
-        { id: 4, company: 'Meta', role: 'Software Engineer', status: 'APPLIED', location: 'Menlo Park, CA', salary: '$170K-$210K', date: 'Mar 1' },
-        { id: 5, company: 'Apple', role: 'iOS Engineer', status: 'WISHLIST', location: 'Cupertino, CA', salary: '$160K-$200K', date: 'Feb 28' },
-        { id: 6, company: 'Netflix', role: 'Backend Engineer', status: 'REJECTED', location: 'Los Gatos, CA', salary: '$180K-$220K', date: 'Feb 20' },
+      stats: { total: 24, applied: 8, screening: 3, interview: 2, offer: 1, rate: 42 },
+      apps: [
+        { id:1, co:'Google', role:'Senior Frontend Engineer', status:'INTERVIEW', loc:'Mountain View, CA', sal:'$180K-$220K', date:'Mar 15, 2026' },
+        { id:2, co:'Stripe', role:'Frontend Engineer', status:'SCREENING', loc:'Remote', sal:'$150K-$180K', date:'Mar 10, 2026' },
+        { id:3, co:'Vercel', role:'DevRel Engineer', status:'OFFER', loc:'Remote', sal:'$140K-$170K', date:'Mar 5, 2026' },
+        { id:4, co:'Meta', role:'Software Engineer', status:'APPLIED', loc:'Menlo Park, CA', sal:'$170K-$210K', date:'Mar 1, 2026' },
+        { id:5, co:'Apple', role:'iOS Engineer', status:'WISHLIST', loc:'Cupertino, CA', sal:'$160K-$200K', date:'Feb 28, 2026' },
+        { id:6, co:'Netflix', role:'Backend Engineer', status:'REJECTED', loc:'Los Gatos, CA', sal:'$180K-$220K', date:'Feb 20, 2026' },
       ]
     };
 
-    function getStatusClass(status) {
-      const map = {
-        WISHLIST: 'status-wishlist',
-        APPLIED: 'status-applied',
-        SCREENING: 'status-screening',
-        INTERVIEW: 'status-interview',
-        OFFER: 'status-offer',
-        REJECTED: 'status-rejected'
-      };
-      return map[status] || 'status-wishlist';
+    const SL = { WISHLIST:'Wishlist', APPLIED:'Applied', SCREENING:'Screening', INTERVIEW:'Interview', OFFER:'Offer', REJECTED:'Rejected' };
+    const badge = s => `<span class="badge badge-${s.toLowerCase()}">${SL[s]}</span>`;
+
+    function nav() {
+      const t = p => `<button class="nav-tab ${currentPage===p?'active':''}" onclick="go('${p}')">${p[0].toUpperCase()+p.slice(1)}</button>`;
+      return `<nav class="nav"><div class="container nav-inner">
+        <div class="nav-logo"><div class="nav-logo-icon">J</div><div class="nav-logo-text">JobTrackr</div></div>
+        <div class="nav-tabs">${t('dashboard')}${t('applications')}${t('kanban')}${t('analytics')}</div>
+        <div class="nav-user"><div class="nav-user-info"><div class="nav-user-name">${D.user.name}</div><div class="nav-user-email">${D.user.email}</div></div><div class="nav-avatar"></div></div>
+      </div></nav>`;
     }
 
-    function getStatusLabel(status) {
-      const map = {
-        WISHLIST: 'Wishlist',
-        APPLIED: 'Applied',
-        SCREENING: 'Screening',
-        INTERVIEW: 'Interview',
-        OFFER: 'Offer',
-        REJECTED: 'Rejected'
-      };
-      return map[status] || status;
+    function dashboard() {
+      const s = D.stats;
+      const colors = ['#0f172a','#2563eb','#7c3aed','#ea580c','#16a34a','#16a34a'];
+      const labels = ['Total Applications','Applied','Screening','Interview','Offer','Response Rate'];
+      const vals = [s.total, s.applied, s.screening, s.interview, s.offer, s.rate+'%'];
+      let stats = vals.map((v,i) => `<div class="stat-card"><div class="stat-value" style="color:${colors[i]}">${v}</div><div class="stat-label">${labels[i]}</div></div>`).join('');
+      let recent = D.apps.slice(0,4).map(a => `<div class="app-row"><div><div class="app-company">${a.co}</div><div class="app-role">${a.role}</div></div>${badge(a.status)}</div>`).join('');
+      const pipes = [
+        {l:'Wishlist',w:'30%',c:'#94a3b8'},{l:'Applied',w:'35%',c:'#3b82f6'},{l:'Screening',w:'15%',c:'#7c3aed'},
+        {l:'Interview',w:'10%',c:'#ea580c'},{l:'Offer',w:'5%',c:'#16a34a'}
+      ];
+      let pipe = pipes.map(p => `<div class="pipeline-row"><span class="pipeline-label">${p.l}</span><div class="pipeline-bar"><div class="pipeline-fill" style="width:${p.w};background:${p.c}"></div></div></div>`).join('');
+      return `<div class="container page">
+        <div class="page-header"><div class="page-title">Welcome back, ${D.user.name}!</div><div class="page-subtitle">Track your job applications and stay organized</div></div>
+        <div class="stats-grid">${stats}</div>
+        <div class="grid-2"><div class="card"><div class="card-title">Recent Applications</div>${recent}</div><div class="card"><div class="card-title">Pipeline Status</div>${pipe}</div></div>
+      </div>`;
     }
 
-    function renderNav() {
-      return `
-        <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">⚡</div>
-                <span class="text-xl font-bold text-gray-900">JobTrackr</span>
-              </div>
-              <div class="flex gap-8">
-                <button onclick="setPage('dashboard')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'dashboard' ? 'nav-active' : ''}">Dashboard</button>
-                <button onclick="setPage('applications')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'applications' ? 'nav-active' : ''}">Applications</button>
-                <button onclick="setPage('kanban')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'kanban' ? 'nav-active' : ''}">Kanban</button>
-                <button onclick="setPage('analytics')" class="text-gray-600 hover:text-gray-900 pb-4 ${currentPage === 'analytics' ? 'nav-active' : ''}">Analytics</button>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="text-right text-sm">
-                  <div class="font-medium text-gray-900">${mockData.user.name}</div>
-                  <div class="text-gray-500 text-xs">${mockData.user.email}</div>
-                </div>
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </nav>
-      `;
+    function applications() {
+      let rows = D.apps.map(a => `<tr><td class="bold">${a.co}</td><td>${a.role}</td><td>${a.loc}</td><td>${a.sal}</td><td>${badge(a.status)}</td><td>${a.date}</td></tr>`).join('');
+      return `<div class="container page">
+        <div class="page-header flex-between"><div><div class="page-title">Applications</div><div class="page-subtitle">Manage all your job applications</div></div><button class="btn">+ Add Application</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Company</th><th>Role</th><th>Location</th><th>Salary</th><th>Status</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
     }
 
-    function renderDashboard() {
-      return `
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Welcome back, ${mockData.user.name}!</h1>
-            <p class="text-gray-500 mt-2">Track your job applications and stay organized</p>
-          </div>
+    function kanban() {
+      const cols = ['WISHLIST','APPLIED','SCREENING','INTERVIEW','OFFER','REJECTED'];
+      let colsHtml = cols.map(c => {
+        const items = D.apps.filter(a => a.status === c);
+        let cards = items.map(a => `<div class="kanban-card"><div class="kanban-card-company">${a.co}</div><div class="kanban-card-role">${a.role}</div><div class="kanban-card-loc">${a.loc}</div></div>`).join('');
+        return `<div class="kanban-col"><div class="kanban-col-title">${SL[c]} (${items.length})</div>${cards}</div>`;
+      }).join('');
+      return `<div class="container page">
+        <div class="page-header"><div class="page-title">Kanban Board</div><div class="page-subtitle">Visualize your job application pipeline</div></div>
+        <div class="kanban-grid">${colsHtml}</div>
+      </div>`;
+    }
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-gray-900">${mockData.stats.total}</div>
-              <div class="text-sm text-gray-500 mt-1">Total Applications</div>
-            </div>
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-blue-600">${mockData.stats.applied}</div>
-              <div class="text-sm text-gray-500 mt-1">Applied</div>
-            </div>
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-purple-600">${mockData.stats.screening}</div>
-              <div class="text-sm text-gray-500 mt-1">Screening</div>
-            </div>
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-orange-600">${mockData.stats.interview}</div>
-              <div class="text-sm text-gray-500 mt-1">Interview</div>
-            </div>
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-green-600">${mockData.stats.offer}</div>
-              <div class="text-sm text-gray-500 mt-1">Offer</div>
-            </div>
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <div class="text-3xl font-bold text-green-600">${mockData.stats.responseRate}%</div>
-              <div class="text-sm text-gray-500 mt-1">Response Rate</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Applications</h2>
-              <div class="space-y-3">
-                ${mockData.applications.slice(0, 4).map(app => `
-                  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                    <div class="flex-1">
-                      <div class="font-medium text-gray-900">${app.company}</div>
-                      <div class="text-sm text-gray-500">${app.role}</div>
-                    </div>
-                    <span class="status-badge ${getStatusClass(app.status)}">${getStatusLabel(app.status)}</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Pipeline Status</h2>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Wishlist</span>
-                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gray-400" style="width: 30%"></div>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Applied</span>
-                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-500" style="width: 35%"></div>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Screening</span>
-                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-purple-500" style="width: 15%"></div>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Interview</span>
-                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-orange-500" style="width: 10%"></div>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Offer</span>
-                  <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-green-500" style="width: 5%"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    function analytics() {
+      const weeks = [12,18,15,21,19,24];
+      let bars = weeks.map((v,i) => `<div class="bar-col"><div class="bar" style="height:${(v/24)*180}px;background:#3b82f6"></div><div class="bar-label">Wk ${i+1}</div></div>`).join('');
+      const dist = [{l:'Wishlist',v:7,p:29,c:'#94a3b8'},{l:'Applied',v:8,p:33,c:'#3b82f6'},{l:'Screening',v:3,p:13,c:'#7c3aed'},{l:'Interview',v:2,p:8,c:'#ea580c'},{l:'Offer',v:1,p:4,c:'#16a34a'},{l:'Rejected',v:3,p:13,c:'#ef4444'}];
+      let distHtml = dist.map(d => `<div class="progress-row"><div class="progress-header"><span style="color:#475569">${d.l}</span><span style="font-weight:600">${d.v} (${d.p}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${d.p}%;background:${d.c}"></div></div></div>`).join('');
+      let metrics = [{l:'Avg. Days to Response',v:'4.2 days'},{l:'Interview Rate',v:'12.5%'},{l:'Offer Rate',v:'4.2%'},{l:'Most Active Day',v:'Tuesday'}].map(m => `<div class="metric-row"><span class="metric-label">${m.l}</span><span class="metric-value">${m.v}</span></div>`).join('');
+      return `<div class="container page">
+        <div class="page-header"><div class="page-title">Analytics</div><div class="page-subtitle">Track your job search metrics and trends</div></div>
+        <div class="grid-2-equal">
+          <div class="card"><div class="card-title">Applications Over Time</div><div class="bar-chart">${bars}</div></div>
+          <div class="card"><div class="card-title">Status Distribution</div>${distHtml}</div>
+          <div class="card"><div class="card-title">Response Rate</div><div class="donut-wrap" style="position:relative"><svg width="160" height="160" viewBox="0 0 100 100" style="transform:rotate(-90deg)"><circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="#3b82f6" stroke-width="8" stroke-dasharray="111 264" stroke-linecap="round"/></svg><div class="donut-center"><div class="donut-value">42%</div><div class="donut-label">Response Rate</div></div></div></div>
+          <div class="card"><div class="card-title">Key Metrics</div>${metrics}</div>
         </div>
-      `;
+      </div>`;
     }
 
-    function renderApplications() {
-      return `
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="flex justify-between items-center mb-8">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900">Applications</h1>
-              <p class="text-gray-500 mt-2">Manage all your job applications</p>
-            </div>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">+ Add Application</button>
-          </div>
-
-          <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table class="w-full">
-              <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Company</th>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Role</th>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Location</th>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Salary</th>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                ${mockData.applications.map(app => `
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${app.company}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${app.role}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${app.location}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${app.salary}</td>
-                    <td class="px-6 py-4"><span class="status-badge ${getStatusClass(app.status)}">${getStatusLabel(app.status)}</span></td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${app.date}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderKanban() {
-      const columns = ['WISHLIST', 'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'REJECTED'];
-      const columnLabels = { WISHLIST: 'Wishlist', APPLIED: 'Applied', SCREENING: 'Screening', INTERVIEW: 'Interview', OFFER: 'Offer', REJECTED: 'Rejected' };
-      const columnColors = { WISHLIST: 'gray', APPLIED: 'blue', SCREENING: 'purple', INTERVIEW: 'orange', OFFER: 'green', REJECTED: 'red' };
-
-      return `
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
-            <p class="text-gray-500 mt-2">Visualize your job application pipeline</p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
-            ${columns.map(col => {
-              const apps = mockData.applications.filter(a => a.status === col);
-              const colorMap = { gray: 'bg-gray-100 border-gray-300', blue: 'bg-blue-100 border-blue-300', purple: 'bg-purple-100 border-purple-300', orange: 'bg-orange-100 border-orange-300', green: 'bg-green-100 border-green-300', red: 'bg-red-100 border-red-300' };
-              return `
-                <div class="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div class="font-semibold text-gray-900 mb-4">${columnLabels[col]} (${apps.length})</div>
-                  <div class="space-y-3">
-                    ${apps.map(app => `
-                      <div class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md cursor-move">
-                        <div class="font-medium text-gray-900">${app.company}</div>
-                        <div class="text-sm text-gray-600 mt-1">${app.role}</div>
-                        <div class="text-xs text-gray-500 mt-2">${app.location}</div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderAnalytics() {
-      return `
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Analytics</h1>
-            <p class="text-gray-500 mt-2">Track your job search metrics and trends</p>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Applications Over Time</h2>
-              <div class="h-64 flex items-end justify-around gap-2">
-                ${[12, 18, 15, 21, 19, 24].map((val, i) => `
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="w-8 bg-blue-500 rounded-t" style="height: ${(val / 24) * 200}px"></div>
-                    <div class="text-xs text-gray-500">Week ${i + 1}</div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Status Distribution</h2>
-              <div class="space-y-4">
-                ${[
-                  { label: 'Wishlist', value: 7, color: 'bg-gray-400', pct: 29 },
-                  { label: 'Applied', value: 8, color: 'bg-blue-500', pct: 33 },
-                  { label: 'Screening', value: 3, color: 'bg-purple-500', pct: 13 },
-                  { label: 'Interview', value: 2, color: 'bg-orange-500', pct: 8 },
-                  { label: 'Offer', value: 1, color: 'bg-green-500', pct: 4 },
-                  { label: 'Rejected', value: 3, color: 'bg-red-500', pct: 13 }
-                ].map(item => `
-                  <div>
-                    <div class="flex justify-between text-sm mb-1">
-                      <span class="text-gray-700">${item.label}</span>
-                      <span class="font-medium text-gray-900">${item.value} (${item.pct}%)</span>
-                    </div>
-                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div class="${item.color}" style="width: ${item.pct}%"></div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Response Rate</h2>
-              <div class="flex items-center justify-center">
-                <div class="relative w-40 h-40">
-                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="8" stroke-dasharray="119.4 283.5" stroke-linecap="round"/>
-                  </svg>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="text-center">
-                      <div class="text-4xl font-bold text-gray-900">42%</div>
-                      <div class="text-sm text-gray-500">Response Rate</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 class="text-lg font-bold text-gray-900 mb-4">Key Metrics</h2>
-              <div class="space-y-4">
-                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
-                  <span class="text-gray-600">Avg. Days to Response</span>
-                  <span class="font-bold text-gray-900">4.2 days</span>
-                </div>
-                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
-                  <span class="text-gray-600">Interview Rate</span>
-                  <span class="font-bold text-gray-900">12.5%</span>
-                </div>
-                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
-                  <span class="text-gray-600">Offer Rate</span>
-                  <span class="font-bold text-gray-900">4.2%</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Most Active Day</span>
-                  <span class="font-bold text-gray-900">Tuesday</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function render() {
-      let content = '';
-      switch (currentPage) {
-        case 'dashboard':
-          content = renderDashboard();
-          break;
-        case 'applications':
-          content = renderApplications();
-          break;
-        case 'kanban':
-          content = renderKanban();
-          break;
-        case 'analytics':
-          content = renderAnalytics();
-          break;
-      }
-      app.innerHTML = renderNav() + content;
-    }
-
-    function setPage(page) {
-      currentPage = page;
-      render();
-    }
-
+    const pages = { dashboard, applications, kanban, analytics };
+    function render() { app.innerHTML = nav() + pages[currentPage](); }
+    function go(p) { currentPage = p; render(); }
     render();
   </script>
 </body>
