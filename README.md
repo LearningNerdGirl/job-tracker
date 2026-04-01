@@ -2,6 +2,12 @@
 
 A full-stack, production-ready SaaS for tracking job applications with a Kanban pipeline, analytics, and JWT authentication.
 
+## Live Demo
+
+**[View Interactive Prototype](https://learningnerdgirl.github.io/job-tracker/)**
+
+> Browse the Dashboard, Applications table, Kanban board, and Analytics — no login or backend required.
+
 ## Tech Stack
 
 | Layer | Technology |
