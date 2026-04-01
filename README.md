@@ -4,7 +4,7 @@ A full-stack, production-ready SaaS for tracking job applications with a Kanban 
 
 ## Live Demo
 
-**[View Interactive Prototype](https://learningnerdgirl.github.io/job-tracker/)**
+**[View Interactive Prototype](https://htmlpreview.github.io/?https://github.com/LearningNerdGirl/job-tracker/blob/main/docs/index.html)**
 
 > Browse the Dashboard, Applications table, Kanban board, and Analytics — no login or backend required.
 
